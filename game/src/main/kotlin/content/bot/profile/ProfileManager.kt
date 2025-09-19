@@ -1,6 +1,8 @@
 package content.bot.profile
 
+import content.bot.addFlag
 import content.bot.getBotFlags
+import content.entity.death.weightedSample
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import world.gregs.voidps.engine.data.ConfigFiles
@@ -26,6 +28,7 @@ class ProfileManager {
     // Profile cache for performance optimization
     private val profileCache = ConcurrentHashMap<String, BotProfile>()
     private val profilesByCategory = ConcurrentHashMap<String, List<BotProfile>>()
+    private val categoriesCache = ConcurrentHashMap<String, ProfileCategory>()
     private val allProfilesCache = ObjectArrayList<BotProfile>()
     
     // Loading state tracking
@@ -95,10 +98,14 @@ class ProfileManager {
             categoryMap.getOrPut(category) { ObjectArrayList() }.add(profile)
         }
         
-        // Sort profiles within each category by weight (descending)
-        categoryMap.forEach { (category, profiles) ->
+        // Sort profiles within each category by weight (descending) and cache both formats
+        categoryMap.forEach { (categoryName, profiles) ->
             profiles.sortByDescending { it.weight }
-            profilesByCategory[category] = profiles
+            profilesByCategory[categoryName] = profiles
+            categoriesCache[categoryName] = ProfileCategory(
+                name = categoryName,
+                profiles = profiles
+            )
         }
     }
     
@@ -211,10 +218,76 @@ class ProfileManager {
         synchronized(this) {
             profileCache.clear()
             profilesByCategory.clear()
+            categoriesCache.clear()
             allProfilesCache.clear()
             profilesLoaded = false
             loadProfiles()
         }
+    }
+    
+    /**
+     * Get a ProfileCategory by name
+     * Returns null if category not found
+     */
+    fun getCategory(categoryName: String): ProfileCategory? {
+        loadProfiles()
+        val normalizedCategory = categoryName.ifEmpty { "general" }
+        return categoriesCache[normalizedCategory]
+    }
+    
+    /**
+     * Get all available ProfileCategory instances
+     */
+    fun getAllCategories(): List<ProfileCategory> {
+        loadProfiles()
+        return categoriesCache.values.toList()
+    }
+    
+    /**
+     * Select a random profile from a category using weighted distribution
+     * Higher weight profiles are more likely to be selected
+     * 
+     * @param categoryName The category to select from
+     * @param playerFlags Optional player flags for eligibility filtering
+     * @return A randomly selected profile, or null if category is empty or no eligible profiles
+     */
+    fun selectWeightedProfileFromCategory(categoryName: String, playerFlags: Set<String> = emptySet()): BotProfile? {
+        val category = getCategory(categoryName) ?: return null
+        
+        return if (playerFlags.isEmpty()) {
+            category.selectWeightedProfile()
+        } else {
+            category.selectWeightedEligibleProfile(playerFlags)
+        }
+    }
+    
+    /**
+     * Select a profile from a category with weighted distribution and fallback
+     * Tries the specified category first, then falls back to general category
+     * 
+     * @param categoryName Primary category to try
+     * @param playerFlags Player flags for eligibility filtering
+     * @return A randomly selected profile, or null if no suitable profiles found
+     */
+    fun selectWeightedProfileWithFallback(categoryName: String, playerFlags: Set<String> = emptySet()): BotProfile? {
+        // Try primary category first
+        var profile = selectWeightedProfileFromCategory(categoryName, playerFlags)
+        
+        // Fallback to general category if no match found
+        if (profile == null && categoryName != "general") {
+            profile = selectWeightedProfileFromCategory("general", playerFlags)
+        }
+        
+        // Final fallback - try any category with weighted selection
+        if (profile == null) {
+            val eligibleProfiles = getEligibleProfiles(playerFlags, "")
+            if (eligibleProfiles.isNotEmpty()) {
+                val weightedProfiles = eligibleProfiles.map { it to it.weight }
+                profile = weightedSample(weightedProfiles)
+            }
+        }
+        
+        return profile
     }
     
     /**
@@ -251,8 +324,13 @@ class ProfileManager {
                 isProfileEligible(profile, botFlags, botCharacteristics)
             }
             
-            // Return highest weighted eligible profile, or null if none found
-            val assignedProfile = eligibleProfiles.maxByOrNull { it.weight }
+            // Use weighted selection for diverse bot distribution, or fallback to highest weight
+            val assignedProfile = if (eligibleProfiles.isNotEmpty()) {
+                val weightedProfiles = eligibleProfiles.map { it to it.weight }
+                weightedSample(weightedProfiles) ?: eligibleProfiles.maxByOrNull { it.weight }
+            } else {
+                null
+            }
             
             // Performance monitoring - should complete within 100ms
             val elapsed = System.currentTimeMillis() - startTime
@@ -366,28 +444,78 @@ class ProfileManager {
     }
     
     /**
-     * Assigns a profile to a bot with fallback handling
-     * Tries preferred category first, then falls back to general category
+     * Assigns a profile to a bot with fallback handling using weighted selection
+     * Tries preferred category first with weighted distribution, then falls back to general category
      * 
      * @param bot The bot to assign a profile to
      * @param preferredCategory Primary category to try
      * @return The assigned profile, or null if no profiles are suitable
      */
     fun assignProfileWithFallback(bot: content.bot.Bot, preferredCategory: String): BotProfile? {
-        // Try preferred category first
-        var profile = assignProfile(bot, preferredCategory)
+        val botFlags = bot.getBotFlags().getFlagNames()
         
-        // Fallback to general category if no match found
-        if (profile == null && preferredCategory != "general") {
-            profile = assignProfile(bot, "general")
+        // Use weighted selection for better distribution
+        return selectWeightedProfileWithFallback(preferredCategory, botFlags)
+    }
+    
+    /**
+     * Handles step failure and attempts fallback category assignment
+     * When a bot step fails and has a fallback_category defined, this method
+     * assigns a new profile from that category using weighted selection
+     * 
+     * @param bot The bot whose step failed
+     * @param failedStep The step that failed
+     * @return A new profile from the fallback category, or null if none available
+     */
+    fun handleStepFailbackAssignment(bot: content.bot.Bot, failedStep: BotStep): BotProfile? {
+        if (failedStep.fallback_category.isEmpty()) {
+            return null
         }
         
-        // Final fallback to any category
-        if (profile == null) {
-            profile = assignProfile(bot, "")
+        val botFlags = bot.getBotFlags().getFlagNames()
+        return selectWeightedProfileFromCategory(failedStep.fallback_category, botFlags)
+    }
+    
+    /**
+     * Executes step requirements and completion checks with fallback support
+     * Evaluates step requirements, and if they fail and fallback_category is defined,
+     * attempts to assign a profile from the fallback category
+     * 
+     * @param bot The bot executing the step
+     * @param step The step to execute
+     * @param context Evaluation context for step conditions
+     * @return ExecutionResult indicating success, failure, or fallback assignment
+     */
+    fun executeStepWithFallback(bot: content.bot.Bot, step: BotStep, context: Map<String, Any>): StepExecutionResult {
+        // Check if step requirements are met
+        val requirementsMet = BotStep.evaluateConditions(step.requirements, context)
+        
+        if (!requirementsMet) {
+            // Requirements not met - attempt fallback if available
+            if (step.fallback_category.isNotEmpty()) {
+                val fallbackProfile = handleStepFailbackAssignment(bot, step)
+                return if (fallbackProfile != null) {
+                    StepExecutionResult.FallbackAssigned(fallbackProfile)
+                } else {
+                    StepExecutionResult.Failed("Requirements not met and no fallback profile available")
+                }
+            } else {
+                return StepExecutionResult.Failed("Requirements not met: ${step.requirements}")
+            }
         }
         
-        return profile
+        // Requirements met - check completion criteria
+        val completed = BotStep.evaluateConditions(step.completion_criteria, context)
+        
+        return if (completed) {
+            // Award flags for completion
+            step.award_flags.forEach { flag ->
+                bot.addFlag(flag)
+            }
+            StepExecutionResult.Completed(step.award_flags)
+        } else {
+            StepExecutionResult.InProgress
+        }
     }
     
     /**
@@ -426,3 +554,13 @@ data class BotCharacteristics(
     val highestSkillLevel: Int,
     val questCount: Int
 )
+
+/**
+ * Result of step execution with fallback handling
+ */
+sealed class StepExecutionResult {
+    object InProgress : StepExecutionResult()
+    data class Completed(val awardedFlags: List<String>) : StepExecutionResult()
+    data class Failed(val reason: String) : StepExecutionResult()
+    data class FallbackAssigned(val newProfile: BotProfile) : StepExecutionResult()
+}

@@ -1,0 +1,19 @@
+name = "firemaking_basic"
+description = "Basic firemaking training for F2P players"
+category = "resource_gathering"
+weight = 3
+required_flags = []
+
+[step.acquire_supplies]
+description = "Get tinderbox and logs for firemaking"
+requirements = []
+completion_criteria = ["has_tinderbox", "has_logs"]
+award_flags = ["firemaking_ready"]
+fallback_category = "coin_gathering"
+
+[step.light_fires]
+description = "Light fires to train firemaking"
+requirements = ["has_tinderbox", "has_logs"]
+completion_criteria = ["firemaking_level_15"]
+award_flags = ["basic_firemaking"]
+fallback_category = "coin_gathering"

@@ -1,0 +1,19 @@
+name = "smithing_basic"
+description = "Basic smithing training for F2P players"
+category = "resource_gathering"
+weight = 4
+required_flags = []
+
+[step.acquire_materials]
+description = "Get hammer and bronze bars"
+requirements = []
+completion_criteria = ["has_hammer", "has_bronze_bars"]
+award_flags = ["smithing_ready"]
+fallback_category = "coin_gathering"
+
+[step.smith_items]
+description = "Smith bronze items at anvil"
+requirements = ["has_hammer", "has_bronze_bars"]
+completion_criteria = ["smithing_level_15"]
+award_flags = ["basic_smithing"]
+fallback_category = "coin_gathering"

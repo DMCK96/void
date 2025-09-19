@@ -2,6 +2,8 @@ import content.bot.TaskManager
 import content.bot.interact.navigation.graph.NavigationGraph
 import content.bot.interact.path.Dijkstra
 import content.bot.interact.path.DijkstraFrontier
+import content.bot.profile.ProfileManager
+import content.bot.profile.TaskMigration
 import content.entity.obj.ship.CharterShips
 import content.entity.player.modal.book.Books
 import content.entity.world.music.MusicTracks
@@ -18,6 +20,8 @@ import world.gregs.voidps.engine.entity.item.floor.ItemSpawns
 fun gameModule(files: ConfigFiles) = module {
     single { ItemSpawns() }
     single { TaskManager() }
+    single { ProfileManager() }
+    single { TaskMigration() }
     single {
         val size = get<NavigationGraph>().size
         Dijkstra(

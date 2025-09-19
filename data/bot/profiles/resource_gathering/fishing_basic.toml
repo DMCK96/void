@@ -1,0 +1,19 @@
+name = "fishing_basic"
+description = "Basic fishing training for F2P players"
+category = "resource_gathering"
+weight = 5
+required_flags = []
+
+[step.acquire_net]
+description = "Get a small fishing net"
+requirements = []
+completion_criteria = ["has_fishing_net"]
+award_flags = ["fishing_ready"]
+fallback_category = "coin_gathering"
+
+[step.catch_fish]
+description = "Catch shrimp and anchovies at draynor"
+requirements = ["has_fishing_net"]
+completion_criteria = ["fishing_level_15"]
+award_flags = ["basic_fishing"]
+fallback_category = "coin_gathering"

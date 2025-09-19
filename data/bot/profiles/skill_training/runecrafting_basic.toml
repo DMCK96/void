@@ -1,0 +1,19 @@
+name = "runecrafting_basic"
+description = "Basic runecrafting training for F2P players"
+category = "skill_training"
+weight = 6
+required_flags = ["rune_mysteries_complete"]
+
+[step.acquire_essences]
+description = "Get rune essence for runecrafting"
+requirements = ["rune_mysteries_complete"]
+completion_criteria = ["has_rune_essence"]
+award_flags = ["runecrafting_ready"]
+fallback_category = "coin_gathering"
+
+[step.craft_runes]
+description = "Craft air runes at air altar"
+requirements = ["has_rune_essence", "has_air_talisman"]
+completion_criteria = ["runecrafting_level_10"]
+award_flags = ["basic_runecrafting"]
+fallback_category = "coin_gathering"

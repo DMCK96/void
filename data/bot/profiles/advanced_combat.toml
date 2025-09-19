@@ -1,0 +1,19 @@
+name = "advanced_combat"
+description = "Advanced combat strategies for experienced bots" 
+category = "combat"
+weight = 20
+required_flags = ["combat_training_completed", "weapon_mastery_basic", "armor_equipped_correctly"]
+
+[step.advanced_tactics]
+description = "Learn advanced combat tactics"
+requirements = ["high_combat_level"]
+completion_criteria = ["advanced_tactics_learned"]
+award_flags = ["combat_expert"]
+fallback_category = "combat"
+
+[step.boss_preparation]
+description = "Prepare for boss encounters"
+requirements = ["combat_expert"]
+completion_criteria = ["boss_ready"]
+award_flags = ["boss_qualified"]
+fallback_category = "combat"

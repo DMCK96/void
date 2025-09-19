@@ -1,0 +1,19 @@
+name = "quest_runner"
+description = "Profile for completing quests efficiently"
+category = "questing"
+weight = 15
+required_flags = ["dialogue_system_mastered", "inventory_management"]
+
+[step.quest_preparation]
+description = "Prepare for quest requirements"
+requirements = ["basic_skills"]
+completion_criteria = ["quest_ready"]
+award_flags = ["quest_prepared"]
+fallback_category = "skilling"
+
+[step.quest_execution]
+description = "Execute quest objectives"
+requirements = ["quest_prepared"]
+completion_criteria = ["quest_completed"]
+award_flags = ["quest_success"]
+fallback_category = "skilling"

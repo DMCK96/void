@@ -1,0 +1,19 @@
+name = "beginner_combat"
+description = "Basic combat training profile for new bots"
+category = "combat"
+weight = 10
+required_flags = ["tutorial_completed"]
+
+[step.gear_check]
+description = "Ensure bot has basic combat gear"
+requirements = ["has_weapon", "has_armor"]
+completion_criteria = ["weapon_equipped", "armor_equipped"]
+award_flags = ["basic_gear_ready"]
+fallback_category = "skilling"
+
+[step.combat_training]
+description = "Train combat on goblins"
+requirements = ["basic_gear_ready"]
+completion_criteria = ["combat_level_10"]
+award_flags = ["combat_training_completed"]
+fallback_category = "woodcutting"

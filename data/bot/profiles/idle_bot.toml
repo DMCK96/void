@@ -1,0 +1,12 @@
+name = "idle_bot"
+description = "Basic idle behavior for waiting periods"
+category = "general"
+weight = 1
+required_flags = []
+
+[step.random_movement]
+description = "Move randomly to avoid detection"
+requirements = []
+completion_criteria = ["movement_completed"]
+award_flags = ["random_movement_done"]
+fallback_category = "general"

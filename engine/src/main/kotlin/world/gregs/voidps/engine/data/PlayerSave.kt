@@ -33,6 +33,7 @@ data class PlayerSave(
     val ignores: List<String>,
     val offers: Array<ExchangeOffer>,
     val history: List<ExchangeHistory>,
+    val botFlags: Map<String, Long> = emptyMap(),
 ) {
 
     fun toPlayer(): Player = Player(
@@ -48,7 +49,12 @@ data class PlayerSave(
         ignores = ignores.toMutableList(),
         offers = offers,
         history = history.toMutableList(),
-    )
+    ).apply {
+        // Store bot flags in player variables for access
+        if (botFlags.isNotEmpty()) {
+            this["bot_flags"] = botFlags
+        }
+    }
 
     fun save(file: File) {
         Config.fileWriter(file) {
@@ -159,6 +165,15 @@ data class PlayerSave(
                 write("}")
             }
             write("\n")
+            
+            if (botFlags.isNotEmpty()) {
+                write("\n")
+                writeSection("bot_flags")
+                for ((flag, timestamp) in botFlags) {
+                    writePair(flag, timestamp)
+                }
+                write("\n")
+            }
         }
     }
 
@@ -183,6 +198,7 @@ data class PlayerSave(
         if (ignores != other.ignores) return false
         if (!offers.contentEquals(other.offers)) return false
         if (history != other.history) return false
+        if (botFlags != other.botFlags) return false
 
         return true
     }
@@ -203,6 +219,7 @@ data class PlayerSave(
         result = 31 * result + ignores.hashCode()
         result = 31 * result + offers.contentHashCode()
         result = 31 * result + history.hashCode()
+        result = 31 * result + botFlags.hashCode()
         return result
     }
 
@@ -223,6 +240,7 @@ data class PlayerSave(
             val ignores = ObjectArrayList<String>()
             val offers = Array(6) { ExchangeOffer.EMPTY }
             val history = ObjectArrayList<ExchangeHistory>()
+            val botFlags = Object2ObjectOpenHashMap<String, Long>()
             Config.fileReader(file) {
                 while (nextPair()) {
                     when (val key = key()) {
@@ -364,6 +382,13 @@ data class PlayerSave(
                                 }
                             }
                         }
+                        "bot_flags" -> {
+                            while (nextPair()) {
+                                val flag = key()
+                                val timestamp = long()
+                                botFlags[flag] = timestamp
+                            }
+                        }
                         else -> throw IllegalArgumentException("Unexpected section: '$section' ${exception()}")
                     }
                 }
@@ -384,6 +409,7 @@ data class PlayerSave(
                 ignores = ignores,
                 offers = offers,
                 history = history,
+                botFlags = botFlags,
             )
         }
     }
@@ -405,4 +431,5 @@ internal fun Player.copy() = PlayerSave(
     ignores = ignores.toList(),
     offers = offers.copyOf(),
     history = history.toList(),
+    botFlags = (this["bot_flags"] as? Map<String, Long>) ?: emptyMap(),
 )

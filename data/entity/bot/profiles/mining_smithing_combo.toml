@@ -1,0 +1,51 @@
+name = "mining_smithing_combo"
+description = "Combined mining and smithing training profile with gear progression"
+category = "skilling"
+weight = 7
+required_flags = []
+
+[step.get_pickaxe]
+description = "Obtain a bronze pickaxe for mining"
+requirements = []
+completion_criteria = [
+    "inventory_has(bronze_pickaxe)"
+]
+award_flags = ["has_pickaxe"]
+fallback_category = "shopping"
+
+[step.mine_copper_tin]
+description = "Mine copper and tin ore for bronze bars"
+requirements = [
+    "has_flag(has_pickaxe)"
+]
+completion_criteria = [
+    "skill_level(mining, 15)",
+    "inventory_has(copper_ore)",
+    "inventory_has(tin_ore)"
+]
+award_flags = ["mining_level_15", "has_bronze_materials"]
+fallback_category = "mining"
+
+[step.smelt_bronze_bars]
+description = "Smelt bronze bars and create bronze items"
+requirements = [
+    "has_flag(has_bronze_materials)"
+]
+completion_criteria = [
+    "skill_level(smithing, 15)"
+]
+award_flags = ["smithing_level_15", "bronze_smithing_complete"]
+fallback_category = "smithing"
+
+[step.upgrade_to_iron]
+description = "Mine iron ore for better experience"
+requirements = [
+    "has_flag(mining_level_15)",
+    "has_flag(smithing_level_15)"
+]
+completion_criteria = [
+    "skill_level(mining, 30)",
+    "skill_level(smithing, 30)"
+]
+award_flags = ["iron_tier_complete", "mining_smithing_combo_complete"]
+fallback_category = "mining"

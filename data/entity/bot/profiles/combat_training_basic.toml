@@ -1,0 +1,48 @@
+name = "combat_training_basic"
+description = "Basic combat training profile for low-level players"
+category = "combat"
+weight = 5
+required_flags = []
+
+[step.prepare_equipment]
+description = "Equip basic combat gear"
+requirements = []
+completion_criteria = [
+    "equipment_has(bronze_sword)",
+    "equipment_has(bronze_shield)"
+]
+award_flags = ["combat_gear_equipped"]
+fallback_category = "equipment"
+
+[step.train_attack]
+description = "Train Attack skill to level 10"
+requirements = [
+    "has_flag(combat_gear_equipped)"
+]
+completion_criteria = [
+    "skill_level(attack, 10)"
+]
+award_flags = ["attack_level_10"]
+fallback_category = "combat"
+
+[step.train_strength]
+description = "Train Strength skill to level 10"
+requirements = [
+    "has_flag(attack_level_10)"
+]
+completion_criteria = [
+    "skill_level(strength, 10)"
+]
+award_flags = ["strength_level_10"]
+fallback_category = "combat"
+
+[step.train_defence]
+description = "Train Defence skill to level 10"
+requirements = [
+    "has_flag(strength_level_10)"
+]
+completion_criteria = [
+    "skill_level(defence, 10)"
+]
+award_flags = ["defence_level_10", "basic_combat_complete"]
+fallback_category = "combat"

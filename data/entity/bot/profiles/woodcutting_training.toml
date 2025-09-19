@@ -1,0 +1,36 @@
+name = "woodcutting_training"
+description = "Complete woodcutting training from level 1 to 30"
+category = "skilling"
+weight = 3
+required_flags = []
+
+[step.get_axe]
+description = "Obtain a bronze axe for woodcutting"
+requirements = []
+completion_criteria = [
+    "inventory_has(bronze_axe)"
+]
+award_flags = ["has_axe"]
+fallback_category = "shopping"
+
+[step.cut_normal_logs]
+description = "Cut normal logs until level 15"
+requirements = [
+    "has_flag(has_axe)"
+]
+completion_criteria = [
+    "skill_level(woodcutting, 15)"
+]
+award_flags = ["woodcutting_level_15"]
+fallback_category = "woodcutting"
+
+[step.cut_oak_logs]
+description = "Cut oak logs until level 30"
+requirements = [
+    "has_flag(woodcutting_level_15)"
+]
+completion_criteria = [
+    "skill_level(woodcutting, 30)"
+]
+award_flags = ["woodcutting_level_30", "woodcutting_training_complete"]
+fallback_category = "woodcutting"

@@ -1,0 +1,33 @@
+name = "goblin_loot"
+description = "Low-level combat coin gathering through goblin killing and loot collection"
+category = "coin_gathering"
+weight = 8
+required_flags = []
+
+[step.goblin_preparation]
+description = "Prepare for goblin hunting with basic gear"
+requirements = []
+completion_criteria = ["has_bronze_weapon", "has_basic_armor", "has_food"]
+award_flags = ["goblin_ready", "basic_gear_acquired"]
+fallback_category = "combat_training"
+
+[step.goblin_hunting]
+description = "Hunt goblins for coins, bones, and equipment drops"
+requirements = ["goblin_ready"]
+completion_criteria = ["goblins_killed_75", "bones_collected_25", "equipment_drops_10"]
+award_flags = ["goblin_hunter", "bone_collector"]
+fallback_category = "combat_training"
+
+[step.loot_selling]
+description = "Sell goblin loot and bones for profit"
+requirements = ["goblin_hunter", "bones_collected_15"]
+completion_criteria = ["coins_earned_300", "bones_sold_20"]
+award_flags = ["goblin_trader", "coin_earner", "coins_200"]
+fallback_category = "coin_gathering"
+
+[step.efficient_hunting]
+description = "Optimize goblin hunting routes and loot collection"
+requirements = ["goblin_trader", "combat_level_8"]
+completion_criteria = ["coins_earned_1000", "hunting_efficiency_improved"]
+award_flags = ["efficient_goblin_hunter", "coins_500"]
+fallback_category = "coin_gathering"

@@ -24,9 +24,7 @@ fun Bot.getBotFlags(): BotFlags {
 /**
  * Checks if the bot has a specific flag
  */
-fun Bot.hasFlag(flag: String): Boolean {
-    return getBotFlags().hasFlag(flag)
-}
+fun Bot.hasFlag(flag: String): Boolean = getBotFlags().hasFlag(flag)
 
 /**
  * Adds a flag to the bot with current timestamp
@@ -67,23 +65,17 @@ fun Bot.removeFlag(flag: String): Boolean {
  * Gets the timestamp when a flag was added
  * @return timestamp in milliseconds, or null if flag not present
  */
-fun Bot.getFlagTimestamp(flag: String): Long? {
-    return getBotFlags().getFlagTimestamp(flag)
-}
+fun Bot.getFlagTimestamp(flag: String): Long? = getBotFlags().getFlagTimestamp(flag)
 
 /**
  * Gets all flags as a read-only map
  */
-fun Bot.getFlags(): Map<String, Long> {
-    return getBotFlags().getAllFlags()
-}
+fun Bot.getFlags(): Map<String, Long> = getBotFlags().getAllFlags()
 
 /**
  * Gets all flag names
  */
-fun Bot.getFlagNames(): Set<String> {
-    return getBotFlags().getFlagNames()
-}
+fun Bot.getFlagNames(): Set<String> = getBotFlags().getFlagNames()
 
 /**
  * Clears all flags from the bot

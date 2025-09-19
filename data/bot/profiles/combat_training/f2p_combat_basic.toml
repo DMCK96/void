@@ -1,0 +1,26 @@
+name = "f2p_combat_basic"
+description = "Basic F2P combat training progression from level 1-20"
+category = "combat_training"
+weight = 15
+required_flags = []
+
+[step.gear_acquisition]
+description = "Acquire basic bronze weapons and leather armor"
+requirements = []
+completion_criteria = ["has_bronze_weapon", "has_leather_armor", "has_food"]
+award_flags = ["basic_gear_acquired"]
+fallback_category = "coin_gathering"
+
+[step.goblin_training]
+description = "Train combat on goblins in Lumbridge area"
+requirements = ["basic_gear_acquired"]
+completion_criteria = ["combat_level_10", "goblins_killed_50"]
+award_flags = ["goblin_training_complete", "combat_basics"]
+fallback_category = "coin_gathering"
+
+[step.chicken_training]
+description = "Alternative training on chickens for safer progression"
+requirements = ["basic_gear_acquired"]
+completion_criteria = ["combat_level_8", "chickens_killed_30"]
+award_flags = ["chicken_training_complete", "combat_basics"]
+fallback_category = "coin_gathering"

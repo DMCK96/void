@@ -17,47 +17,47 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * ProfileManager service that loads and caches bot profiles from TOML files
- * 
+ *
  * This service provides global profile sharing across all bot instances
  * and implements profile caching for performance optimization.
  */
 class ProfileManager {
-    
+
     private val configFiles: ConfigFiles by inject()
-    
+
     // Profile cache for performance optimization
     private val profileCache = ConcurrentHashMap<String, BotProfile>()
     private val profilesByCategory = ConcurrentHashMap<String, List<BotProfile>>()
     private val categoriesCache = ConcurrentHashMap<String, ProfileCategory>()
     private val allProfilesCache = ObjectArrayList<BotProfile>()
-    
+
     // Loading state tracking
     @Volatile
     private var profilesLoaded = false
-    
+
     /**
      * Load all profiles from TOML files using ConfigFiles system
      * Implements lazy loading with caching for performance
      */
     private fun loadProfiles() {
         if (profilesLoaded) return
-        
+
         synchronized(this) {
             if (profilesLoaded) return
-            
+
             val loadedCount = timedLoad("bot profiles") {
                 val tomlFiles: List<String> = configFiles.list("toml")
-                val profileFiles = tomlFiles.filter { filePath: String -> 
-                    filePath.contains("bot/profiles/") 
+                val profileFiles = tomlFiles.filter { filePath: String ->
+                    filePath.contains("bot/profiles/")
                 }
-                
+
                 var loadedCount = 0
                 var errorCount = 0
-                
+
                 profileFiles.forEach { filePath: String ->
                     try {
                         val profile = BotProfile.load(File(filePath))
-                        
+
                         // Validate profile before caching
                         if (validateProfile(profile)) {
                             profileCache[profile.name] = profile
@@ -72,43 +72,43 @@ class ProfileManager {
                         errorCount++
                     }
                 }
-                
+
                 // Build category cache
                 buildCategoryCache()
-                
+
                 if (errorCount > 0) {
                     println("Loaded $loadedCount bot profiles with $errorCount errors")
                 }
-                
+
                 loadedCount // Return count for timedLoad
             }
-            
+
             profilesLoaded = true
         }
     }
-    
+
     /**
      * Build category-based cache for efficient lookups
      */
     private fun buildCategoryCache() {
         val categoryMap = Object2ObjectOpenHashMap<String, MutableList<BotProfile>>()
-        
+
         allProfilesCache.forEach { profile ->
             val category = profile.category.ifEmpty { "general" }
             categoryMap.getOrPut(category) { ObjectArrayList() }.add(profile)
         }
-        
+
         // Sort profiles within each category by weight (descending) and cache both formats
         categoryMap.forEach { (categoryName, profiles) ->
             profiles.sortByDescending { it.weight }
             profilesByCategory[categoryName] = profiles
             categoriesCache[categoryName] = ProfileCategory(
                 name = categoryName,
-                profiles = profiles
+                profiles = profiles,
             )
         }
     }
-    
+
     /**
      * Validate a profile during loading
      */
@@ -118,13 +118,13 @@ class ProfileManager {
             println("Profile validation failed: name is blank")
             return false
         }
-        
+
         // Check for duplicate names
         if (profileCache.containsKey(profile.name)) {
             println("Profile validation failed: duplicate name '${profile.name}'")
             return false
         }
-        
+
         // Validate steps if present
         profile.steps.forEach { step ->
             if (step.name.isBlank()) {
@@ -132,10 +132,10 @@ class ProfileManager {
                 return false
             }
         }
-        
+
         return true
     }
-    
+
     /**
      * Get a specific profile by name
      * Returns null if profile not found
@@ -144,7 +144,7 @@ class ProfileManager {
         loadProfiles()
         return profileCache[name]
     }
-    
+
     /**
      * Get all loaded profiles
      * Returns a copy to prevent external modification
@@ -153,7 +153,7 @@ class ProfileManager {
         loadProfiles()
         return ObjectArrayList(allProfilesCache)
     }
-    
+
     /**
      * Get profiles by category
      * Returns empty list if category not found
@@ -163,7 +163,7 @@ class ProfileManager {
         val normalizedCategory = category.ifEmpty { "general" }
         return profilesByCategory[normalizedCategory] ?: emptyList()
     }
-    
+
     /**
      * Get profiles that match multiple names
      * Useful for batch operations
@@ -172,24 +172,24 @@ class ProfileManager {
         loadProfiles()
         return names.mapNotNull { profileCache[it] }
     }
-    
+
     /**
      * Get profiles that have all required flags satisfied
      */
     fun getEligibleProfiles(playerFlags: Set<String>, category: String = ""): List<BotProfile> {
         loadProfiles()
-        
+
         val candidateProfiles = if (category.isNotEmpty()) {
             getProfilesByCategory(category)
         } else {
             allProfilesCache
         }
-        
+
         return candidateProfiles.filter { profile ->
             profile.required_flags.all { flag -> playerFlags.contains(flag) }
         }.sortedByDescending { it.weight }
     }
-    
+
     /**
      * Get all available categories
      */
@@ -197,7 +197,7 @@ class ProfileManager {
         loadProfiles()
         return profilesByCategory.keys.toSet()
     }
-    
+
     /**
      * Get profile count statistics
      */
@@ -207,10 +207,10 @@ class ProfileManager {
             totalProfiles = allProfilesCache.size,
             categoryCounts = profilesByCategory.mapValues { it.value.size },
             profilesWithFlags = allProfilesCache.count { it.required_flags.isNotEmpty() },
-            profilesWithSteps = allProfilesCache.count { it.steps.isNotEmpty() }
+            profilesWithSteps = allProfilesCache.count { it.steps.isNotEmpty() },
         )
     }
-    
+
     /**
      * Force reload all profiles (useful for development/testing)
      */
@@ -224,7 +224,7 @@ class ProfileManager {
             loadProfiles()
         }
     }
-    
+
     /**
      * Get a ProfileCategory by name
      * Returns null if category not found
@@ -234,7 +234,7 @@ class ProfileManager {
         val normalizedCategory = categoryName.ifEmpty { "general" }
         return categoriesCache[normalizedCategory]
     }
-    
+
     /**
      * Get all available ProfileCategory instances
      */
@@ -242,29 +242,29 @@ class ProfileManager {
         loadProfiles()
         return categoriesCache.values.toList()
     }
-    
+
     /**
      * Select a random profile from a category using weighted distribution
      * Higher weight profiles are more likely to be selected
-     * 
+     *
      * @param categoryName The category to select from
      * @param playerFlags Optional player flags for eligibility filtering
      * @return A randomly selected profile, or null if category is empty or no eligible profiles
      */
     fun selectWeightedProfileFromCategory(categoryName: String, playerFlags: Set<String> = emptySet()): BotProfile? {
         val category = getCategory(categoryName) ?: return null
-        
+
         return if (playerFlags.isEmpty()) {
             category.selectWeightedProfile()
         } else {
             category.selectWeightedEligibleProfile(playerFlags)
         }
     }
-    
+
     /**
      * Select a profile from a category with weighted distribution and fallback
      * Tries the specified category first, then falls back to general category
-     * 
+     *
      * @param categoryName Primary category to try
      * @param playerFlags Player flags for eligibility filtering
      * @return A randomly selected profile, or null if no suitable profiles found
@@ -272,12 +272,12 @@ class ProfileManager {
     fun selectWeightedProfileWithFallback(categoryName: String, playerFlags: Set<String> = emptySet()): BotProfile? {
         // Try primary category first
         var profile = selectWeightedProfileFromCategory(categoryName, playerFlags)
-        
+
         // Fallback to general category if no match found
         if (profile == null && categoryName != "general") {
             profile = selectWeightedProfileFromCategory("general", playerFlags)
         }
-        
+
         // Final fallback - try any category with weighted selection
         if (profile == null) {
             val eligibleProfiles = getEligibleProfiles(playerFlags, "")
@@ -286,10 +286,10 @@ class ProfileManager {
                 profile = weightedSample(weightedProfiles)
             }
         }
-        
+
         return profile
     }
-    
+
     /**
      * Check if profiles have been loaded
      */
@@ -298,7 +298,7 @@ class ProfileManager {
     /**
      * Assigns the most suitable profile to a bot based on characteristics and flag dependencies
      * Completes within 100ms performance constraint through efficient filtering
-     * 
+     *
      * @param bot The bot to assign a profile to
      * @param preferredCategory Optional category to prioritize (empty = all categories)
      * @return The assigned profile, or null if no suitable profiles are available
@@ -306,24 +306,24 @@ class ProfileManager {
     fun assignProfile(bot: content.bot.Bot, preferredCategory: String = ""): BotProfile? {
         val startTime = System.currentTimeMillis()
         loadProfiles()
-        
+
         try {
             // Get bot characteristics for evaluation
             val botCharacteristics = evaluateBotCharacteristics(bot)
             val botFlags = bot.getBotFlags().getFlagNames()
-            
+
             // Get candidate profiles based on category preference
             val candidateProfiles = if (preferredCategory.isNotEmpty()) {
                 getProfilesByCategory(preferredCategory)
             } else {
                 allProfilesCache
             }
-            
+
             // Filter profiles based on flag dependencies and characteristics
             val eligibleProfiles = candidateProfiles.filter { profile ->
                 isProfileEligible(profile, botFlags, botCharacteristics)
             }
-            
+
             // Use weighted selection for diverse bot distribution, or fallback to highest weight
             val assignedProfile = if (eligibleProfiles.isNotEmpty()) {
                 val weightedProfiles = eligibleProfiles.map { it to it.weight }
@@ -331,27 +331,27 @@ class ProfileManager {
             } else {
                 null
             }
-            
+
             // Performance monitoring - should complete within 100ms
             val elapsed = System.currentTimeMillis() - startTime
             if (elapsed > 100) {
                 println("Warning: Profile assignment took ${elapsed}ms (target: <100ms)")
             }
-            
+
             return assignedProfile
         } catch (e: Exception) {
             println("Error during profile assignment: ${e.message}")
             return null
         }
     }
-    
+
     /**
      * Evaluates bot characteristics for profile matching
      * Extracts levels, equipment, location, and other relevant state
      */
     private fun evaluateBotCharacteristics(bot: content.bot.Bot): BotCharacteristics {
         val player = bot.player
-        
+
         return BotCharacteristics(
             combatLevel = player.combatLevel,
             totalLevel = calculateTotalLevel(player),
@@ -360,81 +360,77 @@ class ProfileManager {
             hasArmor = !player.equipment[4].isEmpty() || !player.equipment[7].isEmpty(), // Chest or legs
             inventoryCount = player.inventory.count,
             highestSkillLevel = getHighestSkillLevel(player),
-            questCount = getQuestCount(player)
+            questCount = getQuestCount(player),
         )
     }
-    
+
     /**
      * Checks if a profile is eligible based on flag dependencies and characteristics
      */
     private fun isProfileEligible(
-        profile: BotProfile, 
-        botFlags: Set<String>, 
-        characteristics: BotCharacteristics
+        profile: BotProfile,
+        botFlags: Set<String>,
+        characteristics: BotCharacteristics,
     ): Boolean {
         // Check flag dependencies - all required flags must be present
         if (!profile.required_flags.all { flag -> botFlags.contains(flag) }) {
             return false
         }
-        
+
         // Basic characteristic validation
         if (!validateBasicRequirements(profile, characteristics)) {
             return false
         }
-        
+
         return true
     }
-    
+
     /**
      * Validates basic profile requirements against bot characteristics
      */
     private fun validateBasicRequirements(profile: BotProfile, characteristics: BotCharacteristics): Boolean {
         // Example basic validations - can be extended based on profile definitions
-        
+
         // Combat profiles might require minimum combat level
         if (profile.category == "combat" && characteristics.combatLevel < 10) {
             return false
         }
-        
+
         // Skilling profiles might require certain equipment
         if (profile.category == "skilling" && characteristics.inventoryCount == 0) {
             return false
         }
-        
+
         // Advanced profiles might require quest progress
         if (profile.weight > 5 && characteristics.questCount < 1) {
             return false
         }
-        
+
         return true
     }
-    
+
     /**
      * Calculates total skill level for bot evaluation
      */
-    private fun calculateTotalLevel(player: world.gregs.voidps.engine.entity.character.player.Player): Int {
-        return world.gregs.voidps.engine.entity.character.player.skill.Skill.all.sumOf { skill ->
-            if (skill == world.gregs.voidps.engine.entity.character.player.skill.Skill.Constitution) {
-                player.levels.getMax(skill) / 10
-            } else {
-                player.levels.getMax(skill)
-            }
+    private fun calculateTotalLevel(player: world.gregs.voidps.engine.entity.character.player.Player): Int = world.gregs.voidps.engine.entity.character.player.skill.Skill.all.sumOf { skill ->
+        if (skill == world.gregs.voidps.engine.entity.character.player.skill.Skill.Constitution) {
+            player.levels.getMax(skill) / 10
+        } else {
+            player.levels.getMax(skill)
         }
     }
-    
+
     /**
      * Gets the highest skill level for bot evaluation
      */
-    private fun getHighestSkillLevel(player: world.gregs.voidps.engine.entity.character.player.Player): Int {
-        return world.gregs.voidps.engine.entity.character.player.skill.Skill.all.maxOf { skill ->
-            if (skill == world.gregs.voidps.engine.entity.character.player.skill.Skill.Constitution) {
-                player.levels.getMax(skill) / 10
-            } else {
-                player.levels.getMax(skill)
-            }
+    private fun getHighestSkillLevel(player: world.gregs.voidps.engine.entity.character.player.Player): Int = world.gregs.voidps.engine.entity.character.player.skill.Skill.all.maxOf { skill ->
+        if (skill == world.gregs.voidps.engine.entity.character.player.skill.Skill.Constitution) {
+            player.levels.getMax(skill) / 10
+        } else {
+            player.levels.getMax(skill)
         }
     }
-    
+
     /**
      * Gets quest completion count for bot evaluation
      */
@@ -442,27 +438,27 @@ class ProfileManager {
         // Simplified quest counting - would need actual quest system integration
         return player.variables.data.keys.count { it.contains("quest") && it.contains("complete") }
     }
-    
+
     /**
      * Assigns a profile to a bot with fallback handling using weighted selection
      * Tries preferred category first with weighted distribution, then falls back to general category
-     * 
+     *
      * @param bot The bot to assign a profile to
      * @param preferredCategory Primary category to try
      * @return The assigned profile, or null if no profiles are suitable
      */
     fun assignProfileWithFallback(bot: content.bot.Bot, preferredCategory: String): BotProfile? {
         val botFlags = bot.getBotFlags().getFlagNames()
-        
+
         // Use weighted selection for better distribution
         return selectWeightedProfileWithFallback(preferredCategory, botFlags)
     }
-    
+
     /**
      * Handles step failure and attempts fallback category assignment
      * When a bot step fails and has a fallback_category defined, this method
      * assigns a new profile from that category using weighted selection
-     * 
+     *
      * @param bot The bot whose step failed
      * @param failedStep The step that failed
      * @return A new profile from the fallback category, or null if none available
@@ -471,16 +467,16 @@ class ProfileManager {
         if (failedStep.fallback_category.isEmpty()) {
             return null
         }
-        
+
         val botFlags = bot.getBotFlags().getFlagNames()
         return selectWeightedProfileFromCategory(failedStep.fallback_category, botFlags)
     }
-    
+
     /**
      * Executes step requirements and completion checks with fallback support
      * Evaluates step requirements, and if they fail and fallback_category is defined,
      * attempts to assign a profile from the fallback category
-     * 
+     *
      * @param bot The bot executing the step
      * @param step The step to execute
      * @param context Evaluation context for step conditions
@@ -489,7 +485,7 @@ class ProfileManager {
     fun executeStepWithFallback(bot: content.bot.Bot, step: BotStep, context: Map<String, Any>): StepExecutionResult {
         // Check if step requirements are met
         val requirementsMet = BotStep.evaluateConditions(step.requirements, context)
-        
+
         if (!requirementsMet) {
             // Requirements not met - attempt fallback if available
             if (step.fallback_category.isNotEmpty()) {
@@ -503,10 +499,10 @@ class ProfileManager {
                 return StepExecutionResult.Failed("Requirements not met: ${step.requirements}")
             }
         }
-        
+
         // Requirements met - check completion criteria
         val completed = BotStep.evaluateConditions(step.completion_criteria, context)
-        
+
         return if (completed) {
             // Award flags for completion
             step.award_flags.forEach { flag ->
@@ -517,7 +513,7 @@ class ProfileManager {
             StepExecutionResult.InProgress
         }
     }
-    
+
     /**
      * Validates profile eligibility without assignment
      * Useful for checking if a specific profile can be assigned to a bot
@@ -526,7 +522,7 @@ class ProfileManager {
         val profile = getProfile(profileName) ?: return false
         val botCharacteristics = evaluateBotCharacteristics(bot)
         val botFlags = bot.getBotFlags().getFlagNames()
-        
+
         return isProfileEligible(profile, botFlags, botCharacteristics)
     }
 }
@@ -538,7 +534,7 @@ data class ProfileStats(
     val totalProfiles: Int,
     val categoryCounts: Map<String, Int>,
     val profilesWithFlags: Int,
-    val profilesWithSteps: Int
+    val profilesWithSteps: Int,
 )
 
 /**
@@ -552,7 +548,7 @@ data class BotCharacteristics(
     val hasArmor: Boolean,
     val inventoryCount: Int,
     val highestSkillLevel: Int,
-    val questCount: Int
+    val questCount: Int,
 )
 
 /**

@@ -1,0 +1,33 @@
+name = "cowhide_collection"
+description = "Combat-based coin gathering through cowhide collection and selling"
+category = "coin_gathering"
+weight = 12
+required_flags = ["combat_basics"]
+
+[step.cow_setup]
+description = "Prepare for cow killing with proper gear and food"
+requirements = ["combat_basics", "has_weapon", "has_food"]
+completion_criteria = ["ready_for_cows", "inventory_space_available"]
+award_flags = ["cow_setup_complete"]
+fallback_category = "combat_training"
+
+[step.cowhide_farming]
+description = "Kill cows and collect cowhides for profit"
+requirements = ["cow_setup_complete"]
+completion_criteria = ["cowhides_collected_100", "bones_collected_50"]
+award_flags = ["cowhide_farmer", "efficient_killer"]
+fallback_category = "combat_training"
+
+[step.selling_cowhides]
+description = "Sell cowhides to general store or players for coins"
+requirements = ["cowhide_farmer", "cowhides_collected_50"]
+completion_criteria = ["coins_earned_1000", "trading_experience"]
+award_flags = ["cowhide_trader", "coin_earner", "coins_500"]
+fallback_category = "coin_gathering"
+
+[step.scaling_operation]
+description = "Scale up cowhide collection for larger profits"
+requirements = ["cowhide_trader", "intermediate_combat"]
+completion_criteria = ["coins_earned_5000", "cowhides_sold_500"]
+award_flags = ["cowhide_master", "profitable_operation", "coins_2000"]
+fallback_category = "coin_gathering"

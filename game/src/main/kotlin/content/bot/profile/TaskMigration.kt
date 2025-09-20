@@ -2,6 +2,7 @@ package content.bot.profile
 
 import content.bot.Bot
 import content.bot.TaskManager
+import content.bot.getFlagNames
 import world.gregs.voidps.engine.entity.character.player.Player
 import world.gregs.voidps.engine.inject
 
@@ -71,7 +72,7 @@ class TaskMigration {
         
         // If specific profile not found, try weighted selection from category
         if (assignedProfile == null) {
-            val botFlags = bot.getBotFlags().getFlagNames()
+            val botFlags = bot.getFlagNames()
             assignedProfile = profileManager.selectWeightedProfileFromCategory(mapping.category, botFlags)
         }
         

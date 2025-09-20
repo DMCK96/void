@@ -7,13 +7,13 @@ required_flags = []
 [step.acquire_pickaxe]
 description = "Get a bronze pickaxe for mining"
 requirements = []
-completion_criteria = ["has_pickaxe"]
+completion_criteria = ["inventory_has(bronze_pickaxe)", "coins(20)"]
 award_flags = ["mining_ready"]
 fallback_category = "coin_gathering"
 
 [step.mine_ores]
 description = "Mine copper and tin ore at lumbridge"
-requirements = ["has_pickaxe"]
-completion_criteria = ["mining_level_15"]
+requirements = ["has_flag(mining_ready)"]
+completion_criteria = ["skill_level(mining, 15)", "inventory_has(copper_ore, 50)", "inventory_has(tin_ore, 50)"]
 award_flags = ["basic_mining"]
 fallback_category = "coin_gathering"

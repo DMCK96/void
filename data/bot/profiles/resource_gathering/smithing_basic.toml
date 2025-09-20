@@ -7,13 +7,13 @@ required_flags = []
 [step.acquire_materials]
 description = "Get hammer and bronze bars"
 requirements = []
-completion_criteria = ["has_hammer", "has_bronze_bars"]
+completion_criteria = ["inventory_has(hammer)", "inventory_has(bronze_bar, 20)", "coins(100)"]
 award_flags = ["smithing_ready"]
 fallback_category = "coin_gathering"
 
 [step.smith_items]
 description = "Smith bronze items at anvil"
-requirements = ["has_hammer", "has_bronze_bars"]
-completion_criteria = ["smithing_level_15"]
+requirements = ["has_flag(smithing_ready)", "inventory_has(hammer)", "inventory_has(bronze_bar, 10)"]
+completion_criteria = ["skill_level(smithing, 15)", "inventory_has(bronze_sword, 5)"]
 award_flags = ["basic_smithing"]
 fallback_category = "coin_gathering"

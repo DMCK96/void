@@ -6,14 +6,14 @@ required_flags = ["basic_skills_unlocked"]
 
 [step.fishing_setup]
 description = "Get fishing equipment and find spot"
-requirements = ["has_fishing_rod"]
-completion_criteria = ["fishing_spot_found"]
+requirements = ["inventory_has(fishing_rod)", "inventory_has(fishing_bait, 100)"]
+completion_criteria = ["area(lumbridge_river)", "inventory_space(15)"]
 award_flags = ["fishing_ready"]
 fallback_category = "general"
 
 [step.fishing_training]
 description = "Train fishing skill"
-requirements = ["fishing_ready"]
-completion_criteria = ["fishing_level_20"]
+requirements = ["has_flag(fishing_ready)"]
+completion_criteria = ["skill_level(fishing, 20)", "inventory_has(trout, 50)", "inventory_has(salmon, 20)"]
 award_flags = ["fishing_trained"]
 fallback_category = "skilling"

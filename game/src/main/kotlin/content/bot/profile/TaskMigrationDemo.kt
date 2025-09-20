@@ -3,6 +3,7 @@ package content.bot.profile
 import content.bot.Bot
 import content.bot.TaskManager
 import content.bot.addFlag
+import content.bot.getFlagNames
 import world.gregs.voidps.engine.entity.character.player.Player
 import world.gregs.voidps.type.Tile
 
@@ -43,7 +44,7 @@ object TaskMigrationDemo {
                 if (migratedProfile != null) {
                     println("✅ Successfully migrated to: ${migratedProfile.name} (${migratedProfile.category})")
                     println("   Migration markers set: bot_migrated=${bot.player.contains("bot_migrated")}")
-                    println("   Profile assigned: ${bot.player["bot_profile_assigned"]}")
+                    println("   Profile assigned: ${bot.player.get<String>("bot_profile_assigned")}")
                 } else {
                     println("❌ Migration failed - no suitable profile found")
                 }
@@ -135,24 +136,9 @@ object TaskMigrationDemo {
     }
 
     private fun createMockPlayer(name: String): Player {
-        return object : Player(Tile(3200, 3200), name) {
-            private val data = mutableMapOf<String, Any>()
-            
-            override fun <T> set(key: String, value: T) {
-                data[key] = value as Any
-            }
-            
-            override fun <T> get(key: String): T? {
-                @Suppress("UNCHECKED_CAST")
-                return data[key] as? T
-            }
-            
-            override fun contains(key: String): Boolean = data.containsKey(key)
-            
-            override fun clear(key: String) {
-                data.remove(key)
-            }
-        }
+        // Create a simple player instance that works with the bot system
+        val player = Player(tile = Tile(3200, 3200), accountName = name)
+        return player
     }
 }
 

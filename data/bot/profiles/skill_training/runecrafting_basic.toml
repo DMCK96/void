@@ -6,14 +6,14 @@ required_flags = ["rune_mysteries_complete"]
 
 [step.acquire_essences]
 description = "Get rune essence for runecrafting"
-requirements = ["rune_mysteries_complete"]
-completion_criteria = ["has_rune_essence"]
+requirements = ["has_flag(rune_mysteries_complete)", "quest_completed(rune_mysteries)"]
+completion_criteria = ["inventory_has(rune_essence, 100)", "inventory_has(air_talisman)"]
 award_flags = ["runecrafting_ready"]
 fallback_category = "coin_gathering"
 
 [step.craft_runes]
 description = "Craft air runes at air altar"
-requirements = ["has_rune_essence", "has_air_talisman"]
-completion_criteria = ["runecrafting_level_10"]
+requirements = ["has_flag(runecrafting_ready)", "inventory_has(rune_essence, 50)", "inventory_has(air_talisman)"]
+completion_criteria = ["skill_level(runecrafting, 10)", "inventory_has(air_rune, 500)"]
 award_flags = ["basic_runecrafting"]
 fallback_category = "coin_gathering"

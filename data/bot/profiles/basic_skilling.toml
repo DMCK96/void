@@ -7,13 +7,13 @@ required_flags = []
 [step.woodcutting_intro]
 description = "Learn basic woodcutting"
 requirements = []
-completion_criteria = ["trees_cut_50"]
+completion_criteria = ["skill_level(woodcutting, 10)", "inventory_has(logs, 50)"]
 award_flags = ["woodcutting_basics"]
 fallback_category = "idle"
 
 [step.mining_intro]
 description = "Learn basic mining"
-requirements = ["woodcutting_basics"]
-completion_criteria = ["ores_mined_25"]
+requirements = ["has_flag(woodcutting_basics)"]
+completion_criteria = ["skill_level(mining, 10)", "inventory_has(copper_ore, 25)"]
 award_flags = ["mining_basics"]
 fallback_category = "woodcutting"

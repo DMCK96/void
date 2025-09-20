@@ -7,34 +7,34 @@ required_flags = []
 [step.chicken_setup]
 description = "Prepare for safe chicken killing with minimal gear requirements"
 requirements = []
-completion_criteria = ["has_any_weapon", "food_optional"]
+completion_criteria = ["inventory_has(bronze_sword)", "inventory_space(10)"]
 award_flags = ["chicken_ready", "safe_combat_ready"]
 fallback_category = "combat_training"
 
 [step.feather_collection]
 description = "Kill chickens and collect feathers for crafting/selling"
-requirements = ["chicken_ready"]
-completion_criteria = ["chickens_killed_50", "feathers_collected_50", "raw_chicken_collected_25"]
+requirements = ["has_flag(chicken_ready)"]
+completion_criteria = ["has_flag(chickens_killed_50)", "inventory_has(feather, 50)", "inventory_has(raw_chicken, 25)"]
 award_flags = ["feather_collector", "chicken_killer"]
 fallback_category = "combat_training"
 
 [step.feather_trading]
 description = "Sell feathers to fletchers or general store"
-requirements = ["feather_collector", "feathers_collected_30"]
-completion_criteria = ["coins_earned_200", "feathers_sold_40"]
+requirements = ["has_flag(feather_collector)", "inventory_has(feather, 30)"]
+completion_criteria = ["coins(200)", "has_flag(feathers_sold_40)"]
 award_flags = ["feather_trader", "coin_earner", "coins_100"]
 fallback_category = "coin_gathering"
 
 [step.chicken_farming]
 description = "Scale up chicken farming for consistent feather income"
-requirements = ["feather_trader"]
-completion_criteria = ["coins_earned_800", "feathers_sold_200", "farming_efficiency"]
+requirements = ["has_flag(feather_trader)"]
+completion_criteria = ["coins(800)", "has_flag(feathers_sold_200)"]
 award_flags = ["chicken_farmer", "feather_specialist", "coins_300"]
 fallback_category = "coin_gathering"
 
 [step.diversified_gathering]
 description = "Expand to include raw chicken cooking and selling"
-requirements = ["chicken_farmer", "raw_chicken_collected_50"]
-completion_criteria = ["coins_earned_1500", "cooked_chicken_sold_30"]
+requirements = ["has_flag(chicken_farmer)", "has_flag(raw_chicken_collected_50)"]
+completion_criteria = ["coins(1500)", "has_flag(cooked_chicken_sold_30)"]
 award_flags = ["diversified_gatherer", "cooking_basics", "coins_600"]
 fallback_category = "coin_gathering"

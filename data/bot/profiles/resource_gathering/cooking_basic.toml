@@ -7,13 +7,13 @@ required_flags = []
 [step.get_food]
 description = "Acquire raw food to cook"
 requirements = []
-completion_criteria = ["has_raw_food"]
+completion_criteria = ["inventory_has(raw_chicken, 20)", "coins(50)"]
 award_flags = ["cooking_ready"]
 fallback_category = "coin_gathering"
 
 [step.cook_food]
 description = "Cook food at lumbridge range"
-requirements = ["has_raw_food"]
-completion_criteria = ["cooking_level_15"]
+requirements = ["has_flag(cooking_ready)"]
+completion_criteria = ["skill_level(cooking, 15)", "inventory_has(chicken, 50)"]
 award_flags = ["basic_cooking"]
 fallback_category = "coin_gathering"

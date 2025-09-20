@@ -2,16 +2,35 @@ package content.bot.profile
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import world.gregs.voidps.engine.data.ConfigFiles
 import java.io.File
 
 class BotProfileTest {
 
     @BeforeEach
     fun setup() {
-        // Mock ConfigFiles injection for testing
-        // In real environment, this would be injected automatically
+        // Initialize Koin with minimal config for testing
+        startKoin {
+            modules(
+                module {
+                    single<ConfigFiles> { 
+                        mapOf("toml" to listOf("../data/entity/bot/profiles/combat_training_basic.toml"))
+                    }
+                }
+            )
+        }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        stopKoin()
     }
 
     @Test
@@ -55,19 +74,19 @@ class BotProfileTest {
 
         // Test inventory_has condition
         assertTrue(BotStep.evaluateCondition("inventory_has(bronze_sword)", context))
-        assertTrue(!BotStep.evaluateCondition("inventory_has(iron_sword)", context))
+        assertFalse(BotStep.evaluateCondition("inventory_has(iron_sword)", context))
 
         // Test skill_level condition
         assertTrue(BotStep.evaluateCondition("skill_level(attack, 10)", context))
-        assertTrue(!BotStep.evaluateCondition("skill_level(strength, 10)", context))
+        assertFalse(BotStep.evaluateCondition("skill_level(strength, 10)", context))
 
         // Test has_flag condition
         assertTrue(BotStep.evaluateCondition("has_flag(combat_gear_equipped)", context))
-        assertTrue(!BotStep.evaluateCondition("has_flag(advanced_training)", context))
+        assertFalse(BotStep.evaluateCondition("has_flag(advanced_training)", context))
 
         // Test equipment_has condition
         assertTrue(BotStep.evaluateCondition("equipment_has(bronze_shield)", context))
-        assertTrue(!BotStep.evaluateCondition("equipment_has(iron_shield)", context))
+        assertFalse(BotStep.evaluateCondition("equipment_has(iron_shield)", context))
     }
 
     @Test
@@ -93,6 +112,6 @@ class BotProfileTest {
             "has_flag(combat_gear_equipped)",
         )
 
-        assertTrue(!BotStep.evaluateConditions(failingConditions, context))
+        assertFalse(BotStep.evaluateConditions(failingConditions, context))
     }
 }

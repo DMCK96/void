@@ -7,6 +7,6 @@ required_flags = []
 [step.random_movement]
 description = "Move randomly to avoid detection"
 requirements = []
-completion_criteria = ["movement_completed"]
+completion_criteria = ["has_flag(movement_completed)", "inventory_space(28)"]
 award_flags = ["random_movement_done"]
 fallback_category = "general"

@@ -6,21 +6,21 @@ required_flags = ["combat_basics", "goblin_training_complete"]
 
 [step.equipment_upgrade]
 description = "Upgrade to iron weapons and studded leather armor"
-requirements = ["combat_basics", "coins_500"]
-completion_criteria = ["has_iron_weapon", "has_studded_leather", "gear_upgraded"]
+requirements = ["has_flag(combat_basics)", "coins(500)"]
+completion_criteria = ["inventory_has(iron_sword)", "inventory_has(studded_leather_body)", "equipment_has(iron_sword)"]
 award_flags = ["iron_gear_acquired", "equipment_mastery_basic"]
 fallback_category = "coin_gathering"
 
 [step.cow_training]
 description = "Train combat on cows for better experience and cowhide collection"
-requirements = ["iron_gear_acquired", "combat_level_10"]
-completion_criteria = ["combat_level_25", "cows_killed_100", "cowhides_collected_50"]
+requirements = ["has_flag(iron_gear_acquired)", "combat_level(10)"]
+completion_criteria = ["combat_level(25)", "has_flag(cows_killed_100)", "inventory_has(cowhide, 10)"]
 award_flags = ["cow_training_complete", "intermediate_combat", "cowhide_collector"]
 fallback_category = "combat_training"
 
 [step.combat_specialization]
 description = "Choose combat style specialization (Attack, Strength, Defence)"
-requirements = ["intermediate_combat"]
-completion_criteria = ["specialized_skill_30", "combat_style_mastery"]
+requirements = ["has_flag(intermediate_combat)"]
+completion_criteria = ["skill_level(attack, 30)", "skill_level(strength, 30)", "skill_level(defence, 30)"]
 award_flags = ["combat_specialist", "advanced_combat_ready"]
 fallback_category = "combat_training"

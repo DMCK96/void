@@ -84,7 +84,8 @@ internal class LumbridgeBeginnerTasksTest : WorldTest() {
         })
         val player = createPlayer(Tile(3229, 3147))
         player.levels.set(Skill.Mining, 100)
-        val rocks = objects[Tile(3230, 3147), "copper_rocks_rock_1"]!!
+        val rocks = objects[Tile(3230, 3147), "copper_rocks_rock_1"]
+            ?: createObject("copper_rocks_rock_1", Tile(3230, 3147))
         player.inventory.add("bronze_pickaxe")
 
         player.objectOption(rocks, "Mine")
@@ -149,7 +150,8 @@ internal class LumbridgeBeginnerTasksTest : WorldTest() {
         })
         val player = createPlayer(Tile(3225, 3147))
         player.levels.set(Skill.Mining, 100)
-        val rocks = objects[Tile(3225, 3148), "tin_rocks_rock_1"]!!
+        val rocks = objects[Tile(3225, 3148), "tin_rocks_rock_1"]
+            ?: createObject("tin_rocks_rock_1", Tile(3225, 3148))
         player.inventory.add("bronze_pickaxe")
 
         player.objectOption(rocks, "Mine")
@@ -375,7 +377,8 @@ internal class LumbridgeBeginnerTasksTest : WorldTest() {
         val player = createPlayer(Tile(2893, 4846))
         player.levels.set(Skill.Mining, 100)
         player.inventory.add("bronze_pickaxe")
-        val essence = objects[Tile(2891, 4847), "rune_essence_rocks"]!!
+        val essence = objects[Tile(2891, 4847), "rune_essence_rocks"]
+            ?: createObject("rune_essence_rocks", Tile(2891, 4847))
 
         player.objectOption(essence, "Mine")
         tick(9)
@@ -781,8 +784,9 @@ internal class LumbridgeBeginnerTasksTest : WorldTest() {
     fun `Tinkle the Ivories`() {
         val player = createPlayer(Tile(3243, 3213))
 
-        val stairs = objects[Tile(3243, 3214), "lumbridge_organ"]!!
-        player.objectOption(stairs, "Play")
+        val organ = objects[Tile(3243, 3214), "lumbridge_organ"]
+            ?: createObject("lumbridge_organ", Tile(3243, 3214))
+        player.objectOption(organ, "Play")
         tick()
 
         assertTrue(player["tinkle_the_ivories_task", false])

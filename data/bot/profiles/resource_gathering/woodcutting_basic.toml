@@ -7,13 +7,13 @@ required_flags = []
 [step.acquire_axe]
 description = "Get a bronze axe for woodcutting"
 requirements = []
-completion_criteria = ["has_axe"]
+completion_criteria = ["inventory_has(bronze_axe)", "coins(20)"]
 award_flags = ["woodcutting_ready"]
 fallback_category = "coin_gathering"
 
 [step.cut_trees]
 description = "Cut trees appropriate for woodcutting level"
-requirements = ["has_axe"]
-completion_criteria = ["woodcutting_level_15"]
+requirements = ["has_flag(woodcutting_ready)"]
+completion_criteria = ["skill_level(woodcutting, 15)", "inventory_has(logs, 100)"]
 award_flags = ["basic_woodcutting"]
 fallback_category = "coin_gathering"

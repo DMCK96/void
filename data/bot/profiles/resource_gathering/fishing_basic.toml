@@ -7,13 +7,13 @@ required_flags = []
 [step.acquire_net]
 description = "Get a small fishing net"
 requirements = []
-completion_criteria = ["has_fishing_net"]
+completion_criteria = ["inventory_has(small_fishing_net)", "coins(25)"]
 award_flags = ["fishing_ready"]
 fallback_category = "coin_gathering"
 
 [step.catch_fish]
 description = "Catch shrimp and anchovies at draynor"
-requirements = ["has_fishing_net"]
-completion_criteria = ["fishing_level_15"]
+requirements = ["has_flag(fishing_ready)", "inventory_has(small_fishing_net)"]
+completion_criteria = ["skill_level(fishing, 15)", "inventory_has(raw_shrimps, 100)", "inventory_has(raw_anchovies, 50)"]
 award_flags = ["basic_fishing"]
 fallback_category = "coin_gathering"

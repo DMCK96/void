@@ -6,14 +6,14 @@ required_flags = ["tutorial_completed"]
 
 [step.gear_check]
 description = "Ensure bot has basic combat gear"
-requirements = ["has_weapon", "has_armor"]
-completion_criteria = ["weapon_equipped", "armor_equipped"]
+requirements = ["inventory_has(bronze_sword)", "inventory_has(leather_body)"]
+completion_criteria = ["equipment_has(bronze_sword)", "equipment_has(leather_body)"]
 award_flags = ["basic_gear_ready"]
 fallback_category = "skilling"
 
 [step.combat_training]
 description = "Train combat on goblins"
-requirements = ["basic_gear_ready"]
-completion_criteria = ["combat_level_10"]
+requirements = ["has_flag(basic_gear_ready)"]
+completion_criteria = ["combat_level(10)", "skill_level(attack, 10)"]
 award_flags = ["combat_training_completed"]
 fallback_category = "woodcutting"

@@ -14,7 +14,7 @@ data class BotStep(
     companion object {
         /**
          * Evaluates simple boolean conditions for requirements and completion criteria
-         * Supports: inventory_has(item), skill_level(skill, level), has_flag(flag), equipment_has(item)
+         * Supports: inventory_has(item), bank_has(item), skill_level(skill, level), has_flag(flag), equipment_has(item)
          */
         fun evaluateCondition(condition: String, context: Map<String, Any>): Boolean {
             val trimmed = condition.trim()
@@ -25,8 +25,17 @@ data class BotStep(
                         .trim('"', '\'')
 
                     @Suppress("UNCHECKED_CAST")
-                    val inventory = context["inventory"] as? List<String> ?: emptyList()
-                    inventory.contains(item)
+                    val inventory = context["inventory"] as? Map<String, Int> ?: emptyMap()
+                    inventory.containsKey(item) && (inventory[item] ?: 0) > 0
+                }
+
+                trimmed.startsWith("bank_has(") && trimmed.endsWith(")") -> {
+                    val item = trimmed.removePrefix("bank_has(").removeSuffix(")")
+                        .trim('"', '\'')
+
+                    @Suppress("UNCHECKED_CAST")
+                    val bank = context["bank"] as? Map<String, Int> ?: emptyMap()
+                    bank.containsKey(item) && (bank[item] ?: 0) > 0
                 }
 
                 trimmed.startsWith("skill_level(") && trimmed.endsWith(")") -> {

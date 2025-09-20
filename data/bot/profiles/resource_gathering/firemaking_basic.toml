@@ -7,13 +7,13 @@ required_flags = []
 [step.acquire_supplies]
 description = "Get tinderbox and logs for firemaking"
 requirements = []
-completion_criteria = ["has_tinderbox", "has_logs"]
+completion_criteria = ["inventory_has(tinderbox)", "inventory_has(logs, 100)", "coins(50)"]
 award_flags = ["firemaking_ready"]
 fallback_category = "coin_gathering"
 
 [step.light_fires]
 description = "Light fires to train firemaking"
-requirements = ["has_tinderbox", "has_logs"]
-completion_criteria = ["firemaking_level_15"]
+requirements = ["has_flag(firemaking_ready)", "inventory_has(tinderbox)", "inventory_has(logs, 50)"]
+completion_criteria = ["skill_level(firemaking, 15)", "has_flag(fires_lit_50)"]
 award_flags = ["basic_firemaking"]
 fallback_category = "coin_gathering"

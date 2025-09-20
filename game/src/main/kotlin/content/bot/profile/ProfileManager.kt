@@ -3,6 +3,7 @@ package content.bot.profile
 import content.bot.addFlag
 import content.bot.getBotFlags
 import content.entity.death.weightedSample
+import content.entity.player.bank.bank
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import world.gregs.voidps.engine.data.ConfigFiles
@@ -524,6 +525,65 @@ class ProfileManager {
         val botFlags = bot.getBotFlags().getFlagNames()
 
         return isProfileEligible(profile, botFlags, botCharacteristics)
+    }
+
+    /**
+     * Creates evaluation context from bot state for condition checking
+     */
+    fun createEvaluationContext(bot: content.bot.Bot): Map<String, Any> {
+        val player = bot.player
+
+        // Build inventory map with item counts
+        val inventoryMap = mutableMapOf<String, Int>()
+        for (item in player.inventory.items) {
+            if (!item.isEmpty()) {
+                val currentCount = inventoryMap[item.id] ?: 0
+                inventoryMap[item.id] = currentCount + item.amount
+            }
+        }
+
+        // Build bank map with item counts
+        val bankMap = mutableMapOf<String, Int>()
+        for (item in player.bank.items) {
+            if (!item.isEmpty()) {
+                val currentCount = bankMap[item.id] ?: 0
+                bankMap[item.id] = currentCount + item.amount
+            }
+        }
+
+        // Build skill levels map
+        val skillLevels = mutableMapOf<String, Int>()
+        for (skill in world.gregs.voidps.engine.entity.character.player.skill.Skill.all) {
+            skillLevels[skill.name.lowercase()] = player.levels.getMax(skill)
+        }
+
+        // Build equipment list
+        val equipmentList = mutableListOf<String>()
+        for (item in player.equipment.items) {
+            if (!item.isEmpty()) {
+                equipmentList.add(item.id)
+            }
+        }
+
+        // Get completed quests
+        val completedQuests = mutableSetOf<String>()
+        // TODO: Add quest completion checking based on game state
+
+        // Get current area
+        val currentArea = "" // TODO: Add area detection based on player.tile
+
+        return mapOf(
+            "inventory" to inventoryMap,
+            "bank" to bankMap,
+            "skill_levels" to skillLevels,
+            "flags" to bot.getBotFlags().getFlagNames(),
+            "equipment" to equipmentList,
+            "combat_level" to player.combatLevel,
+            "total_level" to calculateTotalLevel(player),
+            "inventory_count" to player.inventory.count,
+            "completed_quests" to completedQuests,
+            "area" to currentArea
+        )
     }
 }
 

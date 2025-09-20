@@ -1,11 +1,36 @@
 package content.bot.profile
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterEach
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import world.gregs.voidps.engine.data.ConfigFiles
 
 /**
  * Simple test to verify BotProfile compiles and basic functionality works
  */
 class BotProfileCompileTest {
+
+    @BeforeEach
+    fun setup() {
+        // Initialize Koin with minimal config for testing
+        startKoin {
+            modules(
+                module {
+                    single<ConfigFiles> { 
+                        mapOf("toml" to emptyList())
+                    }
+                }
+            )
+        }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        stopKoin()
+    }
 
     @Test
     fun `BotProfile can be instantiated`() {
